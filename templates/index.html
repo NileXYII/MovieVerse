@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieVerse - Explore Movies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+    
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 25px theme('colors.purple.500/30%'),
+                           0 0 50px theme('colors.blue.500/20%');
+            }
+            50% { 
+                box-shadow: 0 0 35px theme('colors.purple.500/40%'),
+                           0 0 70px theme('colors.blue.500/30%');
+            }
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at top right, 
+                rgba(192, 132, 252, 0.15),
+                rgba(14, 165, 233, 0.15),
+                rgba(15, 23, 42, 0.3));
+        }
+
+        .movie-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .search-backdrop {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .glow-animation {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="{ searchOpen: false, query: '', searchResults: [], isScrolled: false }" @scroll.window="isScrolled = window.pageYOffset > 50">
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 transition-all duration-300" :class="isScrolled ? 'bg-slate-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                        MovieVerse by Implied PH
+                    </a>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="#trending" class="text-gray-300 hover:text-white transition-colors">Trending</a>
+                        <a href="#top-rated" class="text-gray-300 hover:text-white transition-colors">Top Rated</a>
+                    </div>
+                </div>
+                <button @click="searchOpen = true" class="p-2 rounded-full hover:bg-white/10 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Modal -->
+    <div x-show="searchOpen" 
+         x-transition:enter="transition duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 search-backdrop" @click.self="searchOpen = false">
+        <div class="max-w-3xl mx-auto mt-20 px-4">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    x-model="query"
+                    @input.debounce.300ms="
+                        fetch(`/search?query=${query}`)
+                            .then(res => res.json())
+                            .then(data => searchResults = data.results)
+                    "
+                    class="w-full px-6 py-4 rounded-2xl bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400 text-lg glow-animation"
+                    placeholder="Search movies..."
+                    autofocus
+                >
+                
+                <div x-show="query.length > 0" 
+                     x-transition
+                     class="absolute w-full mt-2 bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden divide-y divide-gray-700">
+                    <template x-for="result in searchResults" :key="result.id">
+                        <a :href="'/movie/' + result.id" class="flex items-center p-4 hover:bg-white/5 transition-colors">
+                            <div class="flex-1">
+                                <div x-text="result.title" class="font-semibold text-white"></div>
+                                <div x-text="result.release_date" class="text-sm text-gray-400"></div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-32 pb-20 px-4">
+        <div class="max-w-7xl mx-auto relative">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10"></div>
+            <div class="relative">
+                <h1 class="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 bg-clip-text text-transparent float-animation">
+                    Discover Amazing Movies
+                </h1>
+                <p class="text-xl text-gray-300 max-w-2xl mb-12">
+                    Explore the latest trending movies and top-rated classics. Your next favorite film is just a click away.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Section -->
+    <section id="trending" class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-12">
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                    Trending This Week
+                </h2>
+                <div class="h-px flex-1 bg-gradient-to-r from-purple-500/50 to-transparent mx-6"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {% for movie in trending %}
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="movie-card group">
+                    <div class="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg glow-animation">
+                        <img 
+                            src="{{ image_base_url }}{{ movie.poster_path }}" 
+                            alt="{{ movie.title }}"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                        >
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="absolute bottom-0 p-6 space-y-3">
+                                <h3 class="font-bold text-xl">{{ movie.title }}</h3>
+                                <div class="flex items-center space-x-4">
+                                    <span class="px-3 py-1 bg-purple-500/30 backdrop-blur-sm rounded-full text-sm border border-purple-500/30">
+                                        {{ movie.release_date }}
+                                    </span>
+                                    <span class="flex items-center space-x-1">
+                                        <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                                        <span class="text-yellow-500">{{ "%.1f"|format(movie.vote_average) }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Rated Section -->
+    <section id="top-rated" class="py-20 px-4 bg-slate-800/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-12">
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                    Top Rated
+                </h2>
+                <div class="h-px flex-1 bg-gradient-to-r from-purple-500/50 to-transparent mx-6"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {% for movie in top_rated %}
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="movie-card group">
+                    <div class="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg glow-animation">
+                        <img 
+                            src="{{ image_base_url }}{{ movie.poster_path }}" 
+                            alt="{{ movie.title }}"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                        >
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="absolute bottom-0 p-6 space-y-3">
+                                <h3 class="font-bold text-xl">{{ movie.title }}</h3>
+                                <div class="flex items-center space-x-4">
+                                    <span class="px-3 py-1 bg-purple-500/30 backdrop-blur-sm rounded-full text-sm border border-purple-500/30">
+                                        {{ movie.release_date }}
+                                    </span>
+                                    <span class="flex items-center space-x-1">
+                                        <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                                        <span class="text-yellow-500">{{ "%.1f"|format(movie.vote_average) }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</body>
+</html>
