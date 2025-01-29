@@ -1,6 +1,5 @@
 # MovieVerse 🎬
 
-A modern movie discovery web application built with Flask and TMDB API. MovieVerse features a sleek UI with real-time search, trending movies, and detailed movie information.
 
 
 ## ✨ Features
