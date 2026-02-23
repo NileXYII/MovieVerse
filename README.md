@@ -1,5 +1,5 @@
 # MovieVerse 🎬
-Deprecated 
+Deprecated no longer viable
 
 
 ## ✨ Features
